@@ -1,0 +1,24 @@
+{
+  "name": "map",
+  "version": "0.0.0",
+  "main": "dist/map.es.js",
+  "exports": {
+    ".": "./dist/map.es.js"
+  },
+  "types": "types/map.d.ts",
+  "files": [
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "lit-element": "^2.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.3.5",
+    "vite": "^2.4.4"
+  }
+}
