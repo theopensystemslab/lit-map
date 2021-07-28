@@ -7,6 +7,7 @@ import View from "ol/View";
 
 @customElement("my-map")
 export class MyMap extends LitElement {
+  // default map size, can be overridden with CSS
   static styles = css`
     :host {
       display: block;
@@ -15,6 +16,7 @@ export class MyMap extends LitElement {
     }
   `;
 
+  // configurable component properties
   @property({ type: Number })
   latitude = 51.507351;
 
@@ -30,6 +32,7 @@ export class MyMap extends LitElement {
   @property({ type: Number })
   maxZoom = 22;
 
+  // runs after the initial render
   firstUpdated() {
     const target = this.shadowRoot!.querySelector("#map") as HTMLElement;
 
@@ -56,10 +59,11 @@ export class MyMap extends LitElement {
     });
   }
 
+  // render the map
   render() {
     return html`<link
         rel="stylesheet"
-        href="https://cdn.skypack.dev/ol/ol.css"
+        href="https://cdn.skypack.dev/ol@^6.6.1/ol.css"
       />
       <div id="map" style="height: 100%" />`;
   }
