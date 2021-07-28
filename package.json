@@ -1,6 +1,6 @@
 {
   "name": "map",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "dist/map.es.js",
   "exports": {
     ".": "./dist/map.es.js"
@@ -15,7 +15,10 @@
     "build": "tsc && vite build"
   },
   "dependencies": {
-    "lit-element": "^2.5.1"
+    "@turf/union": "^6.5.0",
+    "lit-element": "^2.5.1",
+    "ol": "^6.6.1",
+    "ol-mapbox-style": "^6.4.1"
   },
   "devDependencies": {
     "typescript": "^4.3.5",

@@ -1,50 +1,67 @@
 import { css, customElement, html, LitElement, property } from "lit-element";
+import TileLayer from "ol/layer/Tile";
+import Map from "ol/Map";
+import { fromLonLat, transformExtent } from "ol/proj";
+import OSM from "ol/source/OSM";
+import View from "ol/View";
 
-/**
- * An example element.
- *
- * @slot - This element has a slot
- * @csspart button - The button
- */
 @customElement("my-map")
 export class MyMap extends LitElement {
   static styles = css`
     :host {
       display: block;
-      border: solid 1px gray;
-      padding: 16px;
-      max-width: 800px;
+      width: 500px;
+      height: 500px;
     }
   `;
 
-  /**
-   * The name to say "Hello" to.
-   */
-  @property()
-  name = "World";
-
-  /**
-   * The number of times the button has been clicked.
-   */
   @property({ type: Number })
-  count = 0;
+  latitude = 51.507351;
+
+  @property({ type: Number })
+  longitude = -0.127758;
+
+  @property({ type: Number })
+  zoom = 10;
+
+  @property({ type: Number })
+  minZoom = 7;
+
+  @property({ type: Number })
+  maxZoom = 22;
+
+  firstUpdated() {
+    const target = this.shadowRoot!.querySelector("#map") as HTMLElement;
+
+    new Map({
+      target,
+      layers: [
+        new TileLayer({
+          source: new OSM(),
+        }),
+      ],
+      view: new View({
+        projection: "EPSG:3857",
+        extent: transformExtent(
+          // UK Boundary
+          [-10.76418, 49.528423, 1.9134116, 61.331151],
+          "EPSG:4326",
+          "EPSG:3857"
+        ),
+        minZoom: this.minZoom,
+        maxZoom: this.maxZoom,
+        center: fromLonLat([this.longitude, this.latitude]),
+        zoom: this.zoom,
+      }),
+    });
+  }
 
   render() {
-    return html`
-      <h1>Hello, ${this.name}!</h1>
-      <button @click=${this._onClick} part="button">
-        Click Count: ${this.count}
-      </button>
-      <slot></slot>
-    `;
-  }
-
-  private _onClick() {
-    this.count++;
-  }
-
-  foo(): string {
-    return "foo";
+    return html`<link
+        rel="stylesheet"
+        href="https://cdn.skypack.dev/ol/ol.css"
+      />
+      <div id="map" style="height: 100%" />`;
   }
 }
 
