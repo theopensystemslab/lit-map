@@ -73,6 +73,10 @@ export class MyMap extends LitElement {
         rel="stylesheet"
         href="https://cdn.skypack.dev/ol@^6.6.1/ol.css"
       />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&display=swap"
+      />
       <div id="map" style="height: 100%" />`;
   }
 }
