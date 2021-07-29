@@ -1,9 +1,10 @@
 import { css, customElement, html, LitElement, property } from "lit-element";
-import TileLayer from "ol/layer/Tile";
+import stylefunction from "ol-mapbox-style/dist/stylefunction";
 import Map from "ol/Map";
 import { fromLonLat, transformExtent } from "ol/proj";
-import OSM from "ol/source/OSM";
 import View from "ol/View";
+
+import { rasterBaseMap, osVectorTileBaseMap } from "./os-layers";
 
 @customElement("my-map")
 export class MyMap extends LitElement {
@@ -35,14 +36,21 @@ export class MyMap extends LitElement {
   // runs after the initial render
   firstUpdated() {
     const target = this.shadowRoot!.querySelector("#map") as HTMLElement;
+    
+    // apply style to OS vector tile layer if applicable
+    // ref https://github.com/openlayers/ol-mapbox-style#usage-example
+    if (import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY && osVectorTileBaseMap) {
+      const vectorTileStyleUrl = `https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=${import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY}`;
 
+      fetch(vectorTileStyleUrl)
+        .then((response) => response.json())
+        .then((glStyle) => stylefunction(osVectorTileBaseMap, glStyle, "esri"))
+        .catch((error) => console.log(error));
+    }
+    
     new Map({
       target,
-      layers: [
-        new TileLayer({
-          source: new OSM(),
-        }),
-      ],
+      layers: [import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY ? osVectorTileBaseMap : rasterBaseMap], // maybe a @property ENUM in future?
       view: new View({
         projection: "EPSG:3857",
         extent: transformExtent(
