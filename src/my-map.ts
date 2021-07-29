@@ -6,8 +6,7 @@ import { fromLonLat, transformExtent } from "ol/proj";
 import View from "ol/View";
 
 import { rasterBaseMap, osVectorTileBaseMap } from "./os-layers";
-import { drawingSource, drawingLayer } from "./draw";
-import { formatArea } from "./utils";
+import { drawingLayer, drawingSource, formatArea } from "./draw";
 
 @customElement("my-map")
 export class MyMap extends LitElement {
@@ -38,6 +37,9 @@ export class MyMap extends LitElement {
 
   @property({ type: Boolean })
   drawMode = true;
+
+  @property({ type: String })
+  totalArea: String = "";
 
   // runs after the initial render
   firstUpdated() {
@@ -92,11 +94,11 @@ export class MyMap extends LitElement {
       addInteractions();
 
       // 'change' ensures getFeatures() isn't empty and listens for modifications; 'drawend' does not
-      drawingSource.on("change", function () {
+      drawingSource.on("change", () => {
         let sketches = drawingSource.getFeatures();
         let last_sketch_geom = sketches[sketches.length - 1]["values_"].geometry;
 
-        console.log("drawn area", formatArea(last_sketch_geom));
+        this.totalArea = formatArea(last_sketch_geom);
       });
     }
   }
@@ -107,7 +109,11 @@ export class MyMap extends LitElement {
         rel="stylesheet"
         href="https://cdn.skypack.dev/ol@^6.6.1/ol.css"
       />
-      <div id="map" style="height: 100%" />`;
+      <div id="map" style="height: 100%" />
+      ${this.drawMode ? 
+        html`<span id="area">${this.totalArea}</span>` :
+        null}
+    `;
   }
 }
 
