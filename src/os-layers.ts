@@ -50,4 +50,4 @@ async function applyStyle() {
   }
 }
 
-export const styledVectorTileBaseMap = await applyStyle(); // throws event listener error, need to debug
+applyStyle();
