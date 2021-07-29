@@ -7,8 +7,8 @@ export default defineConfig({
       entry: "src/my-map.ts",
       formats: ["es"],
     },
-    rollupOptions: {
-      external: /^lit-element/,
-    },
+    // rollupOptions: {
+    //   external: /^lit-element/,
+    // },
   },
 });

@@ -5,8 +5,8 @@ import Map from "ol/Map";
 import { fromLonLat, transformExtent } from "ol/proj";
 import View from "ol/View";
 
-import { rasterBaseMap, osVectorTileBaseMap } from "./os-layers";
 import { drawingLayer, drawingSource, formatArea } from "./draw";
+import { osVectorTileBaseMap, rasterBaseMap } from "./os-layers";
 
 @customElement("my-map")
 export class MyMap extends LitElement {
@@ -16,6 +16,12 @@ export class MyMap extends LitElement {
       display: block;
       width: 800px;
       height: 800px;
+    }
+    #map {
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.25s;
+      overflow: hidden;
     }
   `;
 
@@ -39,26 +45,32 @@ export class MyMap extends LitElement {
   drawMode = true;
 
   @property({ type: String })
-  totalArea: String = "";
+  totalArea = "";
+
+  private useVectorTiles =
+    Boolean(import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY) &&
+    osVectorTileBaseMap;
 
   // runs after the initial render
   firstUpdated() {
-    const target = this.shadowRoot!.querySelector("#map") as HTMLElement;
-    
+    const target = this.shadowRoot?.querySelector("#map") as HTMLElement;
+
     // apply style to OS vector tile layer if applicable
     // ref https://github.com/openlayers/ol-mapbox-style#usage-example
-    if (import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY && osVectorTileBaseMap) {
-      const vectorTileStyleUrl = `https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=${import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY}`;
+    if (this.useVectorTiles) {
+      const vectorTileStyleUrl = `https://api.os.uk/maps/vector/v1/vts/resources/styles?srs=3857&key=${
+        import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY
+      }`;
 
       fetch(vectorTileStyleUrl)
         .then((response) => response.json())
         .then((glStyle) => stylefunction(osVectorTileBaseMap, glStyle, "esri"))
-        .catch((error) => console.log(error));
+        .catch(console.error);
     }
     
     const map = new Map({
       target,
-      layers: [import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY ? osVectorTileBaseMap : rasterBaseMap], // maybe a @property ENUM in future?
+      layers: [this.useVectorTiles ? osVectorTileBaseMap : rasterBaseMap],
       view: new View({
         projection: "EPSG:3857",
         extent: transformExtent(
@@ -101,15 +113,19 @@ export class MyMap extends LitElement {
         this.totalArea = formatArea(last_sketch_geom);
       });
     }
+
+    // XXX: force re-render for safari due to it thinking map is 0 height on load
+    setTimeout(() => {
+      window.dispatchEvent(new Event("resize"));
+      target.style.opacity = "1";
+    }, 500);
   }
 
   // render the map
   render() {
-    return html`<link
-        rel="stylesheet"
-        href="https://cdn.skypack.dev/ol@^6.6.1/ol.css"
-      />
-      <div id="map" style="height: 100%" />
+    return html`<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+      <link rel="stylesheet" href="https://cdn.skypack.dev/ol@^6.6.1/ol.css" />
+      <div id="map" />
       ${this.drawMode ? 
         html`<span id="area">${this.totalArea}</span>` :
         null}
