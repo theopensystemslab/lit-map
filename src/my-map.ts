@@ -1,10 +1,13 @@
 import { css, customElement, html, LitElement, property } from "lit-element";
 import stylefunction from "ol-mapbox-style/dist/stylefunction";
+import { Draw, Modify, Snap } from "ol/interaction";
 import Map from "ol/Map";
 import { fromLonLat, transformExtent } from "ol/proj";
 import View from "ol/View";
 
 import { rasterBaseMap, osVectorTileBaseMap } from "./os-layers";
+import { drawingSource, drawingLayer } from "./draw";
+import { formatArea } from "./utils";
 
 @customElement("my-map")
 export class MyMap extends LitElement {
@@ -12,8 +15,8 @@ export class MyMap extends LitElement {
   static styles = css`
     :host {
       display: block;
-      width: 500px;
-      height: 500px;
+      width: 800px;
+      height: 800px;
     }
   `;
 
@@ -33,6 +36,9 @@ export class MyMap extends LitElement {
   @property({ type: Number })
   maxZoom = 22;
 
+  @property({ type: Boolean })
+  drawMode = true;
+
   // runs after the initial render
   firstUpdated() {
     const target = this.shadowRoot!.querySelector("#map") as HTMLElement;
@@ -48,7 +54,7 @@ export class MyMap extends LitElement {
         .catch((error) => console.log(error));
     }
     
-    new Map({
+    const map = new Map({
       target,
       layers: [import.meta.env.VITE_APP_ORDNANCE_SURVEY_KEY ? osVectorTileBaseMap : rasterBaseMap], // maybe a @property ENUM in future?
       view: new View({
@@ -65,6 +71,34 @@ export class MyMap extends LitElement {
         zoom: this.zoom,
       }),
     });
+
+    if (this.drawMode) {
+      map.addLayer(drawingLayer);
+
+      const modify = new Modify({ source: drawingSource });
+      map.addInteraction(modify);
+
+      function addInteractions() {
+        const draw = new Draw({
+          source: drawingSource,
+          type: "Polygon"
+        });
+        map.addInteraction(draw);
+
+        const snap = new Snap({ source: drawingSource, pixelTolerance: 5 });
+        map.addInteraction(snap);
+      }
+
+      addInteractions();
+
+      // 'change' ensures getFeatures() isn't empty and listens for modifications; 'drawend' does not
+      drawingSource.on("change", function () {
+        let sketches = drawingSource.getFeatures();
+        let last_sketch_geom = sketches[sketches.length - 1]["values_"].geometry;
+
+        console.log("drawn area", formatArea(last_sketch_geom));
+      });
+    }
   }
 
   // render the map
